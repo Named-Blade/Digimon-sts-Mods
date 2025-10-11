@@ -1,0 +1,15 @@
+[submodule "dependencies/CallHook"]
+	path = dependencies/CallHook
+	url = https://github.com/Dasaav-dsv/CallHook
+[submodule "dependencies/Pattern16"]
+	path = dependencies/Pattern16
+	url = https://github.com/Dasaav-dsv/Pattern16
+[submodule "dependencies/mINI"]
+	path = dependencies/mINI
+	url = https://github.com/metayeti/mINI
+[submodule "dependencies/PointerChain"]
+	path = dependencies/PointerChain
+	url = https://github.com/Dasaav-dsv/PointerChain
+[submodule "dependencies/minhook"]
+	path = dependencies/minhook
+	url = https://github.com/TsudaKageyu/minhook.git
