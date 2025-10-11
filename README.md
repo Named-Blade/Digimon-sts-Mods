@@ -2,7 +2,7 @@
 
 See Nexus for descriptions
 
-[](https://www.nexusmods.com/)
+[Field Guide Camera Unlocker](https://www.nexusmods.com/digimonstorytimestranger/mods/22)
 
 ### To Build The Mods:
 
