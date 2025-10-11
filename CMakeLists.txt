@@ -53,6 +53,5 @@ set (MOD_ASM ${ARGN})
 endfunction()
 
 #build Mods
-build_mod(testMod testMod)
 build_mod(logMod logMod)
 build_mod(fieldGuideMod fieldGuideMod)
