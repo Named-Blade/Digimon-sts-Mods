@@ -93,8 +93,15 @@ void base() {
 
         // --- Write to object ---
         if (isFieldGuide) {
-            objectData->q = currentRot;
-            objectData->t = currentTranslation;
+            ([](Quaternion currentRot, Translation currentTranslation) {
+                __try {
+                    objectData->q = currentRot;
+                    objectData->t = currentTranslation;
+                }
+                __except (EXCEPTION_EXECUTE_HANDLER) { 
+                    //pass
+                }
+            })(currentRot, currentTranslation);
         } else {
             currentRot = {0,0,0,1};
             currentTranslation = {0,0,0};
