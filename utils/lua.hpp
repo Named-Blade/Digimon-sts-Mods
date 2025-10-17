@@ -41,7 +41,7 @@ static int hooked_print(lua_State *L) {
     int n = lua_gettop(L);
 
     // Prefix for all output
-    fputs("[luaprint] ", stdout);
+    fputs("[logMod] lua print():", stdout);
 
     if (n == 0) {
         fputc('\n', stdout);
