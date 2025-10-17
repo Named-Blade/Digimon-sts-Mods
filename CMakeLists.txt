@@ -15,6 +15,8 @@ set(SHLWAPI_LIB shlwapi.lib)
 set(MINHOOK_LIB ${CMAKE_BINARY_DIR}/minhook/Release/minhook.x64.lib)
 set(ZYCORE_LIB ${CMAKE_BINARY_DIR}/../dependencies/CallHook/thirdparty/zydis/include/Zydis/Zycore/Zycore.lib)
 set(ZYDIS_LIB ${CMAKE_BINARY_DIR}/../dependencies/CallHook/thirdparty/zydis/include/Zydis/Zydis.lib)
+set(LUA_LIB ${CMAKE_BINARY_DIR}/../dependencies/lua/lua52.lib)
+add_compile_definitions(LUA_USE_DLL)
 
 add_subdirectory(dependencies/minhook minhook)
 
@@ -25,6 +27,7 @@ include_directories(${CMAKE_SOURCE_DIR}/dependencies/minhook/include)
 include_directories(${CMAKE_SOURCE_DIR}/dependencies/Pattern16/include)
 include_directories(${CMAKE_SOURCE_DIR}/dependencies/mINI/src)
 include_directories(${CMAKE_SOURCE_DIR}/dependencies/PointerChain)
+include_directories(${CMAKE_SOURCE_DIR}/dependencies/lua/include)
 
 #build asm file
 function(add_asm_source ASM_SRC ASM_OBJ)
@@ -49,7 +52,8 @@ set (MOD_ASM ${ARGN})
 
     add_library(${MOD_NAME} SHARED ${SRC_FILES})
     add_dependencies(${MOD_NAME} minhook)
-    target_link_libraries(${MOD_NAME} PRIVATE ${MINHOOK_LIB} ${ZYCORE_LIB} ${ZYDIS_LIB} ${SHLWAPI_LIB})
+    target_compile_definitions(${MOD_NAME} PRIVATE LUA_USE_DLL)
+    target_link_libraries(${MOD_NAME} PRIVATE ${MINHOOK_LIB} ${ZYCORE_LIB} ${ZYDIS_LIB} ${SHLWAPI_LIB} ${LUA_LIB})
 endfunction()
 
 #build Mods
