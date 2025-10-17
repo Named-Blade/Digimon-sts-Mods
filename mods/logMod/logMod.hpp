@@ -9,6 +9,9 @@
 
 void* luaFuncPtr = (void*)0x1404580B0;
 
+void* luaFuncPtr2 = (void*)0x140BAE580;
+
 typedef uint64_t (*luaFuncType) (uint64_t, uint64_t, uint64_t, uint64_t);
 
 luaFuncType luaFunc;
+luaFuncType luaFunc2;

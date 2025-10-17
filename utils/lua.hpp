@@ -4,6 +4,8 @@ extern "C" {
 #include "lualib.h"
 }
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 void inspect_state(lua_State* L) {
     if (!L) { printf("NULL!\n"); return; }
@@ -123,4 +125,96 @@ int is_print_hooked(lua_State *L) {
     int hooked = lua_rawequal(L, -1, -2);     // compare addresses
     lua_pop(L, 2);                             // cleanup
     return hooked;                             // 1 if hooked, 0 if not
+}
+
+
+#define MAX_VISITED 4096
+#define MAX_FUNCTIONS 1024*32
+#define OUTPUT_FILE "lua_functions.txt"
+
+typedef struct {
+    char* name;
+    lua_CFunction ptr;
+} FunctionEntry;
+
+static FunctionEntry known_functions[MAX_FUNCTIONS];
+static int known_count = 0;
+
+// Check if function already exists in the known map
+static int is_known(const char* name, lua_CFunction fptr) {
+    for (int i = 0; i < known_count; ++i) {
+        if (known_functions[i].ptr == fptr && strcmp(known_functions[i].name, name) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+// Add function to the map and write to file
+static void add_function(const char* name, lua_CFunction fptr) {
+    if (known_count >= MAX_FUNCTIONS) return;
+    known_functions[known_count].name = strdup(name);
+    known_functions[known_count].ptr = fptr;
+    known_count++;
+
+    // Append to file
+    FILE* f = fopen(OUTPUT_FILE, "a");
+    if (f) {
+        fprintf(f, "%s -> %p\n", name, (void*)fptr);
+        fclose(f);
+    }
+}
+
+// Recursive traversal with cycle protection
+static void list_c_functions_safe(lua_State* L, int index, const char* prefix, void** visited, int* visited_count) {
+    index = lua_absindex(L, index);
+
+    // cycle check
+    for (int i = 0; i < *visited_count; ++i) {
+        if (visited[i] == lua_topointer(L, index)) return;
+    }
+    if (*visited_count < MAX_VISITED)
+        visited[(*visited_count)++] = (void*)lua_topointer(L, index);
+
+    lua_pushnil(L);
+    while (lua_next(L, index) != 0) {
+        // -1 = value, -2 = key
+        const char* key_str = NULL;
+        char full_name[512] = {0};
+
+        if (lua_type(L, -2) == LUA_TSTRING)
+            key_str = lua_tostring(L, -2);
+
+        if (key_str && prefix && prefix[0])
+            snprintf(full_name, sizeof(full_name), "%s.%s", prefix, key_str);
+        else if (key_str)
+            snprintf(full_name, sizeof(full_name), "%s", key_str);
+        else
+            full_name[0] = '\0'; // no string key, skip name prefix
+
+        // if value is a C function
+        if (lua_isfunction(L, -1) && lua_iscfunction(L, -1)) {
+            lua_CFunction fptr = lua_tocfunction(L, -1);
+            const char* name_to_log = (full_name[0] != '\0') ? full_name : "(anonymous)";
+            if (!is_known(name_to_log, fptr)) {
+                printf("New C function found: %s -> %p\n", name_to_log, (void*)fptr);
+                add_function(name_to_log, fptr);
+            }
+        }
+
+        // if value is a table, recurse regardless of key type
+        if (lua_istable(L, -1)) {
+            list_c_functions_safe(L, lua_gettop(L), full_name, visited, visited_count);
+        }
+
+        lua_pop(L, 1); // pop value, keep key for next iteration
+    }
+}
+
+// Scan globals and log only new C functions
+void scan_new_c_functions(lua_State* L) {
+    void* visited[MAX_VISITED];
+    int visited_count = 0;
+    lua_pushglobaltable(L);
+    list_c_functions_safe(L, lua_gettop(L), "", visited, &visited_count);
+    lua_pop(L, 1);
 }
