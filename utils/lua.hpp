@@ -32,9 +32,7 @@ void inspect_state(lua_State* L) {
 }
 
 #define REG_ORIG_PRINT "myhook_original_print_v1"
-
-// Name under which we store the original print in the registry
-#define REG_ORIG_PRINT "myhook_original_print_v1"
+#define REG_HOOK_MARKER "myhook_print_marker_v1"
 
 // Replacement print: converts each arg to string and writes to stdout
 static int hooked_print(lua_State *L) {
@@ -86,30 +84,43 @@ static int call_original_print(lua_State *L) {
     return 0;
 }
 
-// Install the hook for the given lua_State* L.
-// This saves the previous global.print into the registry and replaces global.print.
+// Install hook and marker
 void install_print_hook(lua_State *L) {
-    // Save original print:
+    // Save original print
     lua_getglobal(L, "print");
     lua_setfield(L, LUA_REGISTRYINDEX, REG_ORIG_PRINT);
 
-    // Push our function and set it as global.print
+    // Push hooked function
     lua_pushcfunction(L, hooked_print);
     lua_setglobal(L, "print");
+
+    // Push a marker function (unique address)
+    lua_pushcfunction(L, hooked_print);
+    lua_setfield(L, LUA_REGISTRYINDEX, REG_HOOK_MARKER);
 }
 
-// Restore previous print from registry
+// Restore original print
 void restore_print(lua_State *L) {
     lua_getfield(L, LUA_REGISTRYINDEX, REG_ORIG_PRINT);
     if (lua_isfunction(L, -1)) {
         lua_setglobal(L, "print");
     } else {
         lua_pop(L, 1);
-        // remove global.print if nothing to restore
         lua_pushnil(L);
         lua_setglobal(L, "print");
     }
-    // remove registry entry
     lua_pushnil(L);
     lua_setfield(L, LUA_REGISTRYINDEX, REG_ORIG_PRINT);
+    lua_pushnil(L);
+    lua_setfield(L, LUA_REGISTRYINDEX, REG_HOOK_MARKER);
+}
+
+// Check if print is currently hooked
+int is_print_hooked(lua_State *L) {
+    lua_getglobal(L, "print");                // push current print
+    lua_getfield(L, LUA_REGISTRYINDEX, REG_HOOK_MARKER); // push marker
+
+    int hooked = lua_rawequal(L, -1, -2);     // compare addresses
+    lua_pop(L, 2);                             // cleanup
+    return hooked;                             // 1 if hooked, 0 if not
 }

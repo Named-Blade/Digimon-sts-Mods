@@ -1,12 +1,9 @@
 #include "logMod.hpp"
 #include "DLLMain.hpp"
 
-bool f = false;
-
 uint64_t luaFuncOvr(uint64_t lua_state, uint64_t _2, uint64_t _3, uint64_t _4) {
     uint64_t output = luaFunc(lua_state,_2,_3,_4);
-    if (!f) {
-        f = !f;
+    if (!is_print_hooked((lua_State*)lua_state)) {
         install_print_hook((lua_State*)lua_state);
     }
     return output;
