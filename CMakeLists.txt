@@ -59,3 +59,4 @@ endfunction()
 #build Mods
 build_mod(logMod logMod)
 build_mod(fieldGuideMod fieldGuideMod)
+build_mod(nameMod nameMod)
