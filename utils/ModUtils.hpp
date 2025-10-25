@@ -149,11 +149,21 @@ namespace ModUtils
 	}
 	
 	template<typename... Types>
-	static void Log(Types... args)
+	static void Log(Types&&... args)
 	{
 		std::stringstream stream;
 		(stream << ... << args) << std::endl;
-		std::cout << "[" + GetCurrentModName() + "]" + stream.str();
+
+		std::string message = "[" + GetCurrentModName() + "] " + stream.str();
+
+		std::cout << message;
+
+		static std::ofstream logFile(GetCurrentModName()+".log", std::ios::app);
+		if (logFile.is_open())
+		{
+			logFile << message;
+			logFile.flush();
+		}
 	}
 
 

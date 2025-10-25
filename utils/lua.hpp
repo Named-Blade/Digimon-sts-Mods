@@ -7,6 +7,8 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 
+#include <ModUtils.hpp>
+
 void inspect_state(lua_State* L) {
     if (!L) { printf("NULL!\n"); return; }
 
@@ -40,27 +42,24 @@ void inspect_state(lua_State* L) {
 static int hooked_print(lua_State *L) {
     int n = lua_gettop(L);
 
-    // Prefix for all output
-    fputs("[logMod] lua print():", stdout);
-
     if (n == 0) {
-        fputc('\n', stdout);
-        fflush(stdout);
+        ModUtils::Log("lua print():");
         return 0;
     }
 
+    std::stringstream stream;
+    stream << "lua print():";
+
     for (int i = 1; i <= n; ++i) {
         size_t len;
-        // luaL_tolstring converts the Lua value to a string safely
         const char *s = luaL_tolstring(L, i, &len);
         if (!s) s = "(null)";
-        if (i > 1) fputc('\t', stdout);
-        fwrite(s, 1, len, stdout);
-        lua_pop(L, 1); // remove the string pushed by luaL_tolstring
+        if (i > 1) stream << '\t';
+        stream << std::string(s, len);
+        lua_pop(L, 1);
     }
 
-    fputc('\n', stdout);
-    fflush(stdout);
+    ModUtils::Log(stream.str());
     return 0;
 }
 

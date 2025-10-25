@@ -26,7 +26,6 @@ uint64_t luaFuncOvr2(uint64_t lua_state, uint64_t _2, uint64_t _3, uint64_t _4) 
 void base() {
     Log("SLEEP");
     Sleep(5000);
-    con_allocate(false);
     Log("START");
 
     MH_STATUS status = MH_Initialize();
