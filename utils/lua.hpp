@@ -217,3 +217,32 @@ void scan_new_c_functions(lua_State* L) {
     list_c_functions_safe(L, lua_gettop(L), "", visited, &visited_count);
     lua_pop(L, 1);
 }
+
+typedef void (*LuaCallbackType) (int);
+
+typedef struct {
+    int my_debug_id;
+    LuaCallbackType callback;
+} DebugInfo;
+
+static int my_debug_gc(lua_State *L) {
+    DebugInfo *info = (DebugInfo *)lua_touserdata(L, 1);
+    ModUtils::Log("Lua state closing, id = %d\n", info->my_debug_id);
+    if (info->callback != nullptr) {
+        info->callback(info->my_debug_id);
+    }
+    return 0;
+}
+
+void attach_debug_info(lua_State *L, int id, LuaCallbackType callback = nullptr) {
+    DebugInfo *info = (DebugInfo *)lua_newuserdata(L, sizeof(DebugInfo));
+    info->my_debug_id = id;
+    info->callback = callback;
+    if (luaL_newmetatable(L, "MyDebugMeta")) {
+        lua_pushcfunction(L, my_debug_gc);
+        lua_setfield(L, -2, "__gc");
+    }
+    lua_setmetatable(L, -2);
+
+    lua_setfield(L, LUA_REGISTRYINDEX, "my_debug_userdata");
+}
